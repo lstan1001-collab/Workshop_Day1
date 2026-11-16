@@ -10,3 +10,7 @@
 	path = cli
 	url = https://github.com/lstan1001-collab/Workshop_Day1.git
 	branch = cli
+[submodule "bundle"]
+	path = bundle
+	url = https://github.com/lstan1001-collab/Workshop_Day1.git
+	branch = bundle
