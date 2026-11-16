@@ -1,0 +1,90 @@
+<main class="page">
+  <header class="hero">
+    <p class="eyebrow">SNIP · LINK SHORTENER</p>
+    <h1>Short links.<br /><span>Less fuss.</span></h1>
+    <p class="intro">Turn a long URL into a little link that’s ready to share.</p>
+  </header>
+
+  <section class="composer card" aria-labelledby="create-heading">
+    <h2 id="create-heading">Create a short link</h2>
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label for="url">Your destination URL</label>
+      <div class="input-row">
+        <input
+          id="url"
+          type="url"
+          formControlName="url"
+          placeholder="https://example.com/a/very/long/link"
+          autocomplete="url"
+          inputmode="url"
+          [attr.aria-invalid]="form.controls.url.touched && form.controls.url.invalid"
+          [attr.aria-describedby]="form.controls.url.touched && form.controls.url.invalid ? 'url-hint url-error' : 'url-hint'"
+        />
+        <button type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Shortening…' : 'Shorten URL' }}
+        </button>
+      </div>
+      <p class="hint" id="url-hint">Use a complete URL beginning with http:// or https://</p>
+      @if (form.controls.url.touched && form.controls.url.hasError('required')) {
+        <p class="message error" id="url-error">Enter a URL to continue.</p>
+      } @else if (form.controls.url.touched && form.controls.url.hasError('httpUrl')) {
+        <p class="message error" id="url-error">Enter a valid HTTP or HTTPS URL.</p>
+      }
+      @if (formError()) {
+        <p class="message error" role="alert">{{ formError() }}</p>
+      }
+    </form>
+
+    @if (createdShortUrl()) {
+      <div class="result" role="status" aria-live="polite">
+        <span>Your short link</span>
+        <a [href]="createdShortUrl()" target="_blank" rel="noopener noreferrer">{{ createdShortUrl() }}</a>
+      </div>
+    }
+  </section>
+
+  <section class="links-section" aria-labelledby="links-heading">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">YOUR COLLECTION</p>
+        <h2 id="links-heading">Recent links</h2>
+      </div>
+      <button class="refresh-button" type="button" (click)="refreshLinks()" [disabled]="loading()">
+        {{ loading() ? 'Loading…' : 'Refresh' }}
+      </button>
+    </div>
+
+    @if (loading()) {
+      <p class="state-card" role="status">Loading links…</p>
+    } @else if (loadError()) {
+      <div class="state-card error-state" role="alert">
+        <p>{{ loadError() }}</p>
+        <button type="button" (click)="refreshLinks()">Try again</button>
+      </div>
+    } @else if (links().length === 0) {
+      <p class="state-card">No links yet. Create one above to get started.</p>
+    } @else {
+      <div class="table-wrap card">
+        <table>
+          <caption class="visually-hidden">Short links, original destinations, and hit counts</caption>
+          <thead>
+            <tr>
+              <th scope="col">Short link</th>
+              <th scope="col">Destination</th>
+              <th scope="col" class="hits-column">Hits</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (link of links(); track link.code) {
+              <tr>
+                <td><a class="short-link" [href]="link.shortUrl" target="_blank" rel="noopener noreferrer">{{ link.code }}</a></td>
+                <td class="destination">{{ link.url }}</td>
+                <td class="hits-column">{{ link.hits }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</main>
