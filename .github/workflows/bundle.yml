@@ -1,0 +1,69 @@
+name: Build bundle
+
+on:
+  # Layer pushes do not trigger this workflow because this file exists only on main.
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: snip-bundle-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main and submodules
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Test CLI
+        run: node --test cli/cli.test.js
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Test frontend
+        working-directory: frontend
+        run: npm test -- --watch=false --browsers=ChromeHeadless
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Configure Git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Build bundle without publishing
+        run: node scripts/build-bundle.mjs
+
+      - name: Verify generated bundle outputs
+        shell: bash
+        run: |
+          test -f bundle/server.js
+          test -f bundle/cli.js
+          test -f bundle/public/index.html
+          test -f bundle/Dockerfile
+          test -f bundle/railway.json
+
+      - name: Smoke test generated bundle
+        run: node scripts/smoke-test.mjs
+
+      - name: Verify repeat build is a no-op and publish bundle pointers
+        run: node scripts/build-bundle.mjs --push

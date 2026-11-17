@@ -78,5 +78,23 @@ git push
 ```
 
 Repeat with `frontend` or `cli` as appropriate. Rebuild generated release
-output with `node scripts/build-bundle.mjs`; use `--push` to publish the
-generated bundle and updated superproject pointer.
+output with Node.js 20+ and npm installed:
+
+```sh
+node scripts/build-bundle.mjs
+```
+
+The script updates source submodules, builds the Angular app, and assembles
+the `bundle` submodule. It is safe to run again when nothing changed. Use
+`--push` after testing to publish the generated bundle and updated
+superproject pointer:
+
+```sh
+node scripts/build-bundle.mjs --push
+```
+
+The bundle workflow runs hourly and on manual dispatch. The Docker workflow
+runs when the pinned `bundle` submodule commit changes (or when its workflow
+file changes). It runs client tests, an npm dependency audit, a Trivy image
+scan, and a container smoke test before publishing `latest` and a short-SHA
+tag to GHCR. A failed test or security gate prevents the image push.
