@@ -9,6 +9,12 @@ on:
       - bundle
       - .github/workflows/docker.yml
   workflow_dispatch:
+    inputs:
+      accept_angular19_audit:
+        description: Accept the current Angular 19 dependency audit findings for this release
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -97,8 +103,12 @@ jobs:
           trap cleanup EXIT
           node scripts/smoke-test.mjs http://127.0.0.1:3000
 
+      - name: Record accepted Angular 19 audit findings
+        if: steps.dependency-audit.outcome != 'success' && inputs.accept_angular19_audit == true
+        run: echo "::warning::Angular 19 dependency audit findings accepted for this manual release by ${GITHUB_ACTOR}."
+
       - name: Enforce dependency audit
-        if: steps.dependency-audit.outcome != 'success'
+        if: steps.dependency-audit.outcome != 'success' && inputs.accept_angular19_audit != true
         run: exit 1
 
       - name: Log in to GitHub Container Registry

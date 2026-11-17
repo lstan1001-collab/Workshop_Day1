@@ -97,4 +97,7 @@ The bundle workflow runs hourly and on manual dispatch. The Docker workflow
 runs when the pinned `bundle` submodule commit changes (or when its workflow
 file changes). It runs client tests, an npm dependency audit, a Trivy image
 scan, and a container smoke test before publishing `latest` and a short-SHA
-tag to GHCR. A failed test or security gate prevents the image push.
+tag to GHCR. A failed test or image scan prevents the image push. Dependency
+audit findings block normal releases; for a manually dispatched release, the
+operator can explicitly accept the current Angular 19 findings. That exception
+is logged, and the image scan and container smoke test still must pass.
