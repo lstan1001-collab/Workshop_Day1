@@ -1,0 +1,6 @@
+node_modules
+.git
+.gitmodules
+dist
+.angular
+*.log
